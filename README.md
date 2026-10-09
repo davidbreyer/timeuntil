@@ -29,4 +29,10 @@ Open [localhost:5173](http://localhost:5173).
 
 Dates and times are entered in the browser's local time zone and saved as absolute instants. Events are stored under `timeuntil.events.v1` in `localStorage`, independently for each browser and website origin. There is no account, backend database, or cross-device sync.
 
-Serve `dist/` with any static web host. The current Sites deployment is [Time Until](https://time-until-moments.cicadaarmada.chatgpt.site).
+## Publishing
+
+The public GitHub Pages site is [davidbreyer.github.io/timeuntil](https://davidbreyer.github.io/timeuntil/).
+
+The workflow in `.github/workflows/pages.yml` publishes `dist/` automatically when website files change on `main`. It can also be run manually from the repository's Actions tab. GitHub Pages uses GitHub Actions as its publishing source; no build or additional secrets are needed.
+
+The original Sites deployment remains available at [Time Until](https://time-until-moments.cicadaarmada.chatgpt.site). Each site origin has its own locally saved countdowns.
