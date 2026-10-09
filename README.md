@@ -31,7 +31,7 @@ Dates and times are entered in the browser's local time zone and saved as absolu
 
 ## Publishing
 
-The public GitHub Pages site is [davidbreyer.github.io/timeuntil](https://davidbreyer.github.io/timeuntil/).
+The public GitHub Pages site is [www.davidbreyer.com/timeuntil](https://www.davidbreyer.com/timeuntil/). GitHub Pages inherits the existing account domain; the default [davidbreyer.github.io/timeuntil](https://davidbreyer.github.io/timeuntil/) address redirects there.
 
 The workflow in `.github/workflows/pages.yml` publishes `dist/` automatically when website files change on `main`. It can also be run manually from the repository's Actions tab. GitHub Pages uses GitHub Actions as its publishing source; no build or additional secrets are needed.
 
