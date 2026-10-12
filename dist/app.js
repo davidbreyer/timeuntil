@@ -97,8 +97,10 @@
     finally { $('import-file').value = ''; $('import-events').disabled = false; }
   });
   function parts(target, now = Date.now()) {
-    const diff = Math.max(0, Math.ceil((new Date(target).getTime() - now) / 1000));
-    return { days: Math.floor(diff / 86400), hours: Math.floor(diff % 86400 / 3600), minutes: Math.floor(diff % 3600 / 60), seconds: diff % 60, arrived: new Date(target).getTime() <= now };
+    const delta = new Date(target).getTime() - now;
+    const arrived = delta <= 0;
+    const diff = arrived ? Math.floor(-delta / 1000) : Math.ceil(delta / 1000);
+    return { days: Math.floor(diff / 86400), hours: Math.floor(diff % 86400 / 3600), minutes: Math.floor(diff % 3600 / 60), seconds: diff % 60, arrived };
   }
   const pad = (n) => String(n).padStart(2, '0');
   function theme(element, color) { const [accent, rgb] = themes[color]; element.style.setProperty('--accent', accent); element.style.setProperty('--accent-rgb', rgb); }
@@ -153,14 +155,14 @@
     // Fit unusually distant dates without allowing the day digits to overlap.
     const dayDigits = String(p.days).length;
     document.querySelector('[data-unit="days"]').style.fontSize = dayDigits > 3 ? 'clamp(22px, ' + (24 / dayDigits) + 'vw, ' + (300 / dayDigits) + 'px)' : '';
-    $('hero-status').textContent = !events.length ? 'PREVIEW COUNTDOWN' : p.arrived ? 'THE MOMENT IS HERE' : 'COUNTING DOWN';
-    $('hero-note').textContent = !events.length ? 'Something worth looking forward to.' : p.arrived ? 'The wait is over. Enjoy your moment.' : 'Every second brings you closer.';
-    $('clock-hand').setAttribute('transform', 'rotate(' + (p.arrived ? 0 : p.seconds * 6) + ' 50 50)');
-    $('hero-digits').setAttribute('aria-label', p.arrived ? 'The countdown has finished' : p.days + ' days, ' + p.hours + ' hours, ' + p.minutes + ' minutes, ' + p.seconds + ' seconds remaining');
+    $('hero-status').textContent = !events.length ? 'PREVIEW COUNTDOWN' : p.arrived ? 'TIME SINCE' : 'COUNTING DOWN';
+    $('hero-note').textContent = !events.length ? 'Something worth looking forward to.' : p.arrived ? 'Time elapsed since this moment.' : 'Every second brings you closer.';
+    $('clock-hand').setAttribute('transform', 'rotate(' + p.seconds * 6 + ' 50 50)');
+    $('hero-digits').setAttribute('aria-label', p.days + ' days, ' + p.hours + ' hours, ' + p.minutes + ' minutes, ' + p.seconds + (p.arrived ? ' seconds elapsed' : ' seconds remaining'));
     for (const el of document.querySelectorAll('.card-countdown')) {
       const event = events.find(x => x.id === el.dataset.id); if (!event) continue;
       const t = parts(event.target, now);
-      el.innerHTML = t.arrived ? 'The moment is here' : t.days + '<small>d</small> ' + pad(t.hours) + '<small>h</small> ' + pad(t.minutes) + '<small>m</small> ' + pad(t.seconds) + '<small>s</small>';
+      el.innerHTML = (t.arrived ? '<span class="card-direction">Time since</span>' : '') + t.days + '<small>d</small> ' + pad(t.hours) + '<small>h</small> ' + pad(t.minutes) + '<small>m</small> ' + pad(t.seconds) + '<small>s</small>';
     }
   }
   function localFields(target) {

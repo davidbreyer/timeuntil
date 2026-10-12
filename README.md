@@ -3,6 +3,7 @@
 A personal countdown board for the moments you are looking forward to.
 
 - Live countdowns in days, hours, minutes, and seconds
+- Automatic **Time since** counting when a countdown reaches its target date
 - Multiple named events with editable dates, times, and accent colors
 - A focus view for the selected countdown
 - A separate black-and-white Clock screen with local 24-hour time and a ring of 60 second dots
@@ -31,6 +32,8 @@ Open [localhost:5173](http://localhost:5173).
 - `.openai/hosting.json`: the existing Sites deployment configuration
 
 Dates and times are entered in the browser's local time zone and saved as absolute instants. Events are stored under `timeuntil.events.v1` in `localStorage`, independently for each browser and website origin. There is no account, backend database, or cross-device sync.
+
+At the target instant, a countdown switches to **Time since** and counts upward from zero. Past dates immediately show elapsed time, including on event cards and in focus view. The original date stays saved, so refreshing or importing a backup restores the correct elapsed time.
 
 Open **Clock** in the header to see the current local time as `HH:MM`. At the start of each minute all 60 dots are white; one dot turns black each second, clockwise from the top. The dots reset when the minute changes. Use **Countdowns** or Escape to return to the board.
 
