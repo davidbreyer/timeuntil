@@ -28,7 +28,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v6
       - name: Check JavaScript syntax
-        run: node --check dist/app.js
+        run: |
+          node --check dist/app.js
+          node --check dist/clock.js
       - name: Stamp release version and cache busters
         run: node scripts/stamp-version.cjs
       - name: Configure GitHub Pages
