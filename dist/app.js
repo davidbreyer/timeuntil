@@ -1,6 +1,7 @@
 'use strict';
 (() => {
   const KEY = 'timeuntil.events.v1';
+  const appVersion = document.querySelector('meta[name="app-version"]').content;
   const themes = { ember: ['#ff915d', '255,145,93'], violet: ['#b5a3ff', '181,163,255'], tidal: ['#79d8d0', '121,216,208'], gold: ['#f4ce71', '244,206,113'] };
   const $ = (id) => document.getElementById(id);
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time';
@@ -9,7 +10,7 @@
   const demo = { id: 'preview', name: 'Your next big thing', target: new Date(Date.now() + 30 * 86400000).toISOString(), color: 'ember' };
 
   function validateEvent(e) {
-    return e && typeof e.id === 'string' && typeof e.name === 'string' && e.name.trim().length > 0 && e.name.length <= 80 && typeof e.target === 'string' && Number.isFinite(new Date(e.target).getTime()) && Object.hasOwn(themes, e.color);
+    return e && typeof e.id === 'string' && e.id.length > 0 && e.id.length <= 200 && typeof e.name === 'string' && e.name.trim().length > 0 && e.name.length <= 80 && typeof e.target === 'string' && Number.isFinite(new Date(e.target).getTime()) && new Date(e.target).getFullYear() >= 1 && new Date(e.target).getFullYear() <= 9999 && Object.hasOwn(themes, e.color);
   }
   function load() {
     try {
@@ -41,6 +42,60 @@
     clearTimeout(toastTimeout); $('toast').textContent = message; $('toast').hidden = false;
     toastTimeout = setTimeout(() => { $('toast').hidden = true; }, 4500);
   }
+  function transferStatus(message, error = false) {
+    $('transfer-status').textContent = message;
+    $('transfer-status').hidden = false;
+    $('transfer-status').classList.toggle('is-error', error);
+  }
+  function exportEvents() {
+    const backup = { app: 'timeuntil', schemaVersion: 1, appVersion, exportedAt: new Date().toISOString(), timezone: zone, events, selected };
+    const blob = new Blob([JSON.stringify(backup, null, 2) + '\n'], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = 'timeuntil-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    transferStatus('Exported ' + events.length + ' countdown' + (events.length === 1 ? '' : 's') + ' as a JSON backup.');
+  }
+  async function importEvents(file) {
+    // Validate the whole backup before changing any existing countdowns.
+    if (file.size > 2 * 1024 * 1024) throw new Error('Choose a JSON backup smaller than 2 MB.');
+    let backup;
+    try { backup = JSON.parse(await file.text()); } catch { throw new Error('This file is not valid JSON. Choose a Time Until backup.'); }
+    if (!backup || Array.isArray(backup) || !Array.isArray(backup.events) || (backup.app !== undefined && backup.app !== 'timeuntil')) throw new Error('This file is not a Time Until countdown backup.');
+    if (backup.schemaVersion !== undefined && backup.schemaVersion !== 1) throw new Error('This backup uses an unsupported format version.');
+    if (backup.events.length > 10000) throw new Error('This backup contains too many countdowns. Import up to 10,000 at a time.');
+    const incoming = backup.events.map((event, index) => {
+      if (!validateEvent(event) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(event.target)) throw new Error('Countdown ' + (index + 1) + ' has an invalid name, date, or color. Nothing was imported.');
+      return { id: event.id, name: event.name.trim(), target: new Date(event.target).toISOString(), color: event.color };
+    });
+    const ids = new Set(events.map(e => e.id));
+    const signature = e => JSON.stringify([e.name.trim(), new Date(e.target).toISOString()]);
+    const signatures = new Set(events.map(signature));
+    const additions = [];
+    for (const event of incoming) {
+      if (ids.has(event.id) || signatures.has(signature(event))) continue;
+      ids.add(event.id); signatures.add(signature(event)); additions.push(event);
+    }
+    const skipped = incoming.length - additions.length;
+    if (additions.length) {
+      const nextEvents = [...events, ...additions];
+      const nextSelected = selected || (nextEvents.some(e => e.id === backup.selected) ? backup.selected : additions[0].id);
+      // A failed save leaves both the current board and the existing stored data intact.
+      if (!storageAvailable) throw new Error('Browser storage is unavailable. Import could not be saved. Your current countdowns are unchanged.');
+      try { localStorage.setItem(KEY, JSON.stringify({ events: nextEvents, selected: nextSelected })); }
+      catch { throw new Error('The backup could not be saved in this browser. Your current countdowns are unchanged.'); }
+      events = nextEvents; selected = nextSelected; render();
+    }
+    transferStatus('Imported ' + additions.length + ' countdown' + (additions.length === 1 ? '' : 's') + '.' + (skipped ? ' Skipped ' + skipped + ' duplicate' + (skipped === 1 ? '' : 's') + '.' : '') + ' Existing countdowns kept.');
+  }
+  $('export-events').addEventListener('click', exportEvents);
+  $('import-events').addEventListener('click', () => $('import-file').click());
+  $('import-file').addEventListener('change', async () => {
+    const file = $('import-file').files[0]; if (!file) return;
+    $('import-events').disabled = true;
+    try { await importEvents(file); } catch (error) { transferStatus(error.message, true); }
+    finally { $('import-file').value = ''; $('import-events').disabled = false; }
+  });
   function parts(target, now = Date.now()) {
     const diff = Math.max(0, Math.ceil((new Date(target).getTime() - now) / 1000));
     return { days: Math.floor(diff / 86400), hours: Math.floor(diff % 86400 / 3600), minutes: Math.floor(diff % 3600 / 60), seconds: diff % 60, arrived: new Date(target).getTime() <= now };

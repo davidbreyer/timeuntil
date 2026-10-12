@@ -6,6 +6,7 @@ on:
     paths:
       - 'dist/**'
       - '.github/workflows/pages.yml'
+      - 'scripts/stamp-version.cjs'
   workflow_dispatch:
 
 permissions:
@@ -28,6 +29,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Check JavaScript syntax
         run: node --check dist/app.js
+      - name: Stamp release version and cache busters
+        run: node scripts/stamp-version.cjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload website
