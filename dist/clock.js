@@ -3,6 +3,23 @@
   const time = document.getElementById('clock-time');
   const detail = document.getElementById('clock-detail');
   const ring = document.getElementById('seconds-dots');
+  const selector = document.getElementById('clock-color');
+  const colorKey = 'timeuntil.clock.color.v1';
+  const colors = { ember: '#ff915d', violet: '#b5a3ff', tidal: '#79d8d0', gold: '#f4ce71' };
+  function applyColor(color) {
+    const choice = Object.hasOwn(colors, color) ? color : 'ember';
+    selector.value = choice;
+    document.documentElement.style.setProperty('--clock-color', colors[choice]);
+  }
+  function restoreColor() {
+    try { applyColor(localStorage.getItem(colorKey)); } catch { applyColor(selector.value); }
+  }
+  restoreColor();
+  selector.addEventListener('change', () => {
+    applyColor(selector.value);
+    try { localStorage.setItem(colorKey, selector.value); } catch { /* The selected color still works for this visit. */ }
+  });
+  window.addEventListener('storage', event => { if (event.key === colorKey || event.key === null) restoreColor(); });
   const dots = [];
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time';
   let timer;
@@ -27,8 +44,8 @@
     if (!document.hidden) timer = setTimeout(tick, 1000 - now.getMilliseconds() + 5);
   }
   document.addEventListener('visibilitychange', tick);
-  window.addEventListener('pageshow', tick);
+  window.addEventListener('pageshow', () => { restoreColor(); tick(); });
   window.addEventListener('pagehide', () => clearTimeout(timer));
-  document.addEventListener('keydown', event => { if (event.key === 'Escape') document.getElementById('back-to-countdowns').click(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && event.target !== selector) document.getElementById('back-to-countdowns').click(); });
   tick();
 })();

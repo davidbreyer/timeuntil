@@ -6,7 +6,7 @@ A personal countdown board for the moments you are looking forward to.
 - Automatic **Time since** counting when a countdown reaches its target date
 - Multiple named events with editable dates, times, and accent colors
 - A focus view for the selected countdown
-- A separate black-and-white Clock screen with local 24-hour time and a ring of 60 second dots
+- A separate Clock screen with local 24-hour time, four accent colors, and a ring of 60 second dots
 - Automatic saving in local browser storage
 - Import and export JSON backups, with imports merging into existing countdowns
 - Responsive layouts and keyboard-accessible dialogs
@@ -35,7 +35,7 @@ Dates and times are entered in the browser's local time zone and saved as absolu
 
 At the target instant, a countdown switches to **Time since** and counts upward from zero. Past dates immediately show elapsed time, including on event cards and in focus view. The original date stays saved, so refreshing or importing a backup restores the correct elapsed time.
 
-Open **Clock** in the header to see the current local time as `HH:MM`. At the start of each minute all 60 dots are white; one dot turns black each second, clockwise from the top. The dots reset when the minute changes. Use **Countdowns** or Escape to return to the board.
+Open **Clock** in the header to see the current local time as `HH:MM`. Choose **Ember**, **Violet**, **Tidal**, or **Gold** with the Color selector; the numbers and active dots use that color. The choice is saved in this browser under `timeuntil.clock.color.v1`, with Ember as the default. One dot turns black each second, clockwise from the top, and all 60 reset when the minute changes. Use **Countdowns** or Escape to return to the board (Escape inside the selector closes its menu).
 
 ## Publishing
 
