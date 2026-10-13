@@ -6,7 +6,6 @@ body{margin:0;background:#000;min-width:280px;min-height:100vh;min-height:100dvh
 .clock-navigation a:hover{color:var(--clock-color)}
 .clock-navigation a:focus-visible{outline:2px solid var(--clock-color);outline-offset:6px;border-radius:2px}
 .clock-controls{position:fixed;top:max(20px,env(safe-area-inset-top));right:max(24px,env(safe-area-inset-right));z-index:1;display:flex;align-items:center;gap:10px;min-height:44px}
-.clock-controls label{font-size:.875rem;color:var(--clock-color)}
 .clock-controls select{font:inherit;font-size:.875rem;color:var(--clock-color);background:#090909;border:1px solid #333;border-radius:6px;min-height:44px;padding:9px 10px;cursor:pointer}
 .clock-controls select:focus-visible{outline:2px solid var(--clock-color);outline-offset:4px}
 .clock-controls option{color:var(--clock-color);background:#090909}
