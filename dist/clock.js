@@ -20,6 +20,81 @@
     try { localStorage.setItem(colorKey, selector.value); } catch { /* The selected color still works for this visit. */ }
   });
   window.addEventListener('storage', event => { if (event.key === colorKey || event.key === null) restoreColor(); });
+  function initializeKeepAwake() {
+    const toggle = document.getElementById('keep-awake');
+    const status = document.getElementById('awake-status');
+    const supported = typeof navigator.wakeLock?.request === 'function';
+    if (!window.isSecureContext || !supported) {
+      toggle.disabled = true;
+      status.textContent = !window.isSecureContext ? 'Requires a secure connection.' : 'Not supported in this browser.';
+      return;
+    }
+    let wanted = false, sentinel = null, pending = false, pageActive = true, generation = 0;
+    function inactiveStatus() {
+      status.textContent = !wanted ? 'Off' : document.hidden || !pageActive ? 'Paused' : 'Paused — toggle to retry.';
+    }
+    function releaseCurrent() {
+      const previous = sentinel;
+      sentinel = null;
+      if (previous && !previous.released) void previous.release().catch(() => {});
+    }
+    async function acquire() {
+      if (!wanted || !pageActive || document.hidden || pending || (sentinel && !sentinel.released)) return;
+      const requestGeneration = generation;
+      pending = true;
+      status.textContent = 'Starting…';
+      try {
+        const lock = await navigator.wakeLock.request('screen');
+        // A delayed request must not keep the screen on after the user turns it off or leaves.
+        if (requestGeneration !== generation || !wanted || !pageActive || document.hidden || lock.released) {
+          if (!lock.released) await lock.release();
+          if (requestGeneration === generation) inactiveStatus();
+          return;
+        }
+        sentinel = lock;
+        lock.addEventListener('release', () => {
+          if (sentinel !== lock) return;
+          sentinel = null;
+          inactiveStatus();
+        });
+        status.textContent = 'Active';
+      } catch {
+        if (requestGeneration === generation && wanted && pageActive && !document.hidden) {
+          wanted = false;
+          toggle.checked = false;
+          status.textContent = 'Unavailable — tap Keep awake to retry.';
+        }
+      } finally {
+        pending = false;
+        // Resume a newer request once an older, cancelled request finishes.
+        if (requestGeneration !== generation && wanted && pageActive && !document.hidden && !sentinel) void acquire();
+      }
+    }
+    toggle.addEventListener('change', () => {
+      wanted = toggle.checked;
+      generation++;
+      if (wanted) void acquire();
+      else { releaseCurrent(); inactiveStatus(); }
+    });
+    document.addEventListener('visibilitychange', () => {
+      generation++;
+      if (document.hidden) { releaseCurrent(); inactiveStatus(); }
+      else if (wanted) void acquire();
+    });
+    window.addEventListener('pagehide', () => {
+      pageActive = false;
+      generation++;
+      releaseCurrent();
+      inactiveStatus();
+    });
+    window.addEventListener('pageshow', () => {
+      pageActive = true;
+      generation++;
+      if (wanted) void acquire();
+    });
+    window.addEventListener('focus', () => { if (wanted) void acquire(); });
+  }
+  initializeKeepAwake();
   const dots = [];
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time';
   let timer;

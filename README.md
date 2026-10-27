@@ -7,6 +7,7 @@ A personal countdown board for the moments you are looking forward to.
 - Multiple named events with editable dates, times, and accent colors
 - A focus view for the selected countdown
 - A separate Clock screen with local 24-hour time, four accent colors, and a ring of 60 second dots
+- An optional **Keep awake** switch on the Clock screen, with confirmed active/paused status
 - Automatic saving in local browser storage
 - Import and export JSON backups, with imports merging into existing countdowns
 - Responsive layouts and keyboard-accessible dialogs
@@ -36,6 +37,8 @@ Dates and times are entered in the browser's local time zone and saved as absolu
 At the target instant, a countdown switches to **Time since** and counts upward from zero. Past dates immediately show elapsed time, including on event cards and in focus view. The original date stays saved, so refreshing or importing a backup restores the correct elapsed time.
 
 Open **Clock** in the header to see the current local time as `HH:MM`. Choose **Ember**, **Violet**, **Tidal**, or **Gold** with the Color selector; the numbers and active dots use that color. The choice is saved in this browser under `timeuntil.clock.color.v1`, with Ember as the default. One dot turns black each second, clockwise from the top, and all 60 reset when the minute changes. Use **Countdowns** or Escape to return to the board (Escape inside the selector closes its menu).
+
+Turn on **Keep awake** to request a screen wake lock. **Active** appears only after the browser grants it. Leaving the page releases the lock; returning to the visible Clock screen tries to resume it while the switch remains on. The switch starts off for each new visit. Unsupported browsers show a disabled switch, and a rejected request shows **Unavailable** so you can retry. This requires HTTPS (or a trusted localhost preview); battery-saving settings and device policy can prevent activation. The feature uses the browser's Screen Wake Lock API and does not change the phone's system settings.
 
 ## Publishing
 
